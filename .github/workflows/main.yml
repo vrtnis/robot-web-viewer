@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: 18
 
+      - name: Set NODE_OPTIONS
+        run: echo "NODE_OPTIONS=--openssl-legacy-provider" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: yarn install
 
