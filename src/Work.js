@@ -1,47 +1,19 @@
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import * as THREE from "three";
-import React, { useRef, Suspense } from "react";
-import { Canvas, useLoader, useThree } from "react-three-fiber";
+import { useRef, Suspense, useState } from "react"; // Remove React
+import { Canvas, useLoader, useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import { css, jsx } from "@emotion/react";
-
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import URDFLoader from "urdf-loader";
 
-import { OrbitControls } from "drei";
 
 const theme = css`
   width: 100vw;
   height: 100vh;
   background-color: #272727;
 `;
-
-/*
-Reference coordinate frames for THREE.js and ROS.
-Both coordinate systems are right handed so the URDF is instantiated without
-frame transforms. The resulting model can be rotated to rectify the proper up,
-right, and forward directions
-
-THREE.js
-   Y
-   |
-   |
-   .-----X
- ／
-Z
-
-   Z
-   |   Y
-   | ／
-   .-----X
-
-ROS URDf
-       Z
-       |   X
-       | ／
- Y-----.
-
-*/
 
 const mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
@@ -51,15 +23,11 @@ const toMouseCoord = (el, e, v) => {
   v.y = -((e.pageY - el.offsetTop) / el.offsetHeight) * 2 + 1;
 };
 
-// Get which part of the robot is hit by the mouse click
 const getCollisions = (camera, robot, mouse) => {
   if (!robot) return [];
-
   raycaster.setFromCamera(mouse, camera);
-
   const meshes = [];
   robot.traverse(c => c.type === "Mesh" && meshes.push(c));
-
   return raycaster.intersectObjects(meshes);
 };
 
@@ -67,25 +35,20 @@ const isJoint = j => {
   return j.isURDFJoint && j.jointType !== "fixed";
 };
 
-// Find the nearest parent that is a joint
 const findNearestJoint = m => {
   let curr = m;
   while (curr) {
-    if (isJoint(curr)) {
-      break;
-    }
+    if (isJoint(curr)) break;
     curr = curr.parent;
   }
   return curr;
 };
 
 const LoadModel = ({ filepath }) => {
-  const [hovered, setHovered] = React.useState(null);
+  const [hovered, setHovered] = useState(null);
   const { camera, gl } = useThree();
-
-  // loading robot model from urdf
-  // https://raw.githubusercontent.com/{username}/{repo_name}/{branch}/{filepath}
   const ref = useRef();
+
   const robot = useLoader(URDFLoader, filepath, loader => {
     loader.loadMeshFunc = (path, manager, done) => {
       new STLLoader(manager).load(
@@ -99,12 +62,9 @@ const LoadModel = ({ filepath }) => {
         err => done(null, err)
       );
     };
-    loader.fetchOptions = {
-      headers: { Accept: "application/vnd.github.v3.raw" }
-    };
+    loader.fetchOptions = { headers: { Accept: "application/vnd.github.v3.raw" } };
   });
 
-  // The highlight material
   const highlightMaterial = new THREE.MeshPhongMaterial({
     shininess: 10,
     color: "#FFFFFF",
@@ -112,10 +72,8 @@ const LoadModel = ({ filepath }) => {
     emissiveIntensity: 0.25
   });
 
-  // Highlight the link geometry under a joint
   const highlightLinkGeometry = (m, revert) => {
     const traverse = c => {
-      // Set or revert the highlight color
       if (c.type === "Mesh") {
         if (revert) {
           c.material = c.__origMaterial;
@@ -125,9 +83,6 @@ const LoadModel = ({ filepath }) => {
           c.material = highlightMaterial;
         }
       }
-
-      // Look into the children and stop if the next child is
-      // another joint
       if (c === m || !isJoint(c)) {
         for (let i = 0; i < c.children.length; i++) {
           traverse(c.children[i]);
@@ -141,15 +96,12 @@ const LoadModel = ({ filepath }) => {
     toMouseCoord(gl.domElement, event, mouse);
     const collision = getCollisions(camera, robot, mouse).shift() || null;
     const joint = collision && findNearestJoint(collision.object);
-
     if (joint !== hovered) {
       if (hovered) {
-        //console.log("pointer out");
         highlightLinkGeometry(hovered, true);
         setHovered(null);
       }
       if (joint) {
-        //console.log("pointer over");
         highlightLinkGeometry(joint, false);
         setHovered(joint);
       }
@@ -179,8 +131,6 @@ const LoadModel = ({ filepath }) => {
 };
 
 export const Work = () => {
-  //console.log(props);
-  //console.log(props.qs);  // querystring
   var modelpath =
     "https://raw.githubusercontent.com/nakano16180/robot-web-viewer/master/public/urdf/open_manipulator.URDF";
 
@@ -196,15 +146,15 @@ export const Work = () => {
         <directionalLight
           color={0xffffff}
           position={[4, 10, 1]}
-          shadowMapWidth={2048}
-          shadowMapHeight={2048}
+          shadow-mapWidth={2048}
+          shadow-mapHeight={2048}
           castShadow
         />
         <Suspense fallback={null}>
           <LoadModel filepath={modelpath} />
         </Suspense>
         <OrbitControls />
-        <gridHelper args={[0, 0, 0]} />
+        <gridHelper args={[10, 10]} />
         <axesHelper />
       </Canvas>
     </div>
