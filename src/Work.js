@@ -1,13 +1,12 @@
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import * as THREE from "three";
-import { useRef, Suspense, useState } from "react"; // Remove React
+import { useRef, Suspense, useState, useCallback, useMemo, useEffect } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { css, jsx } from "@emotion/react";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import URDFLoader from "urdf-loader";
-
 
 const theme = css`
   width: 100vw;
@@ -65,14 +64,16 @@ const LoadModel = ({ filepath }) => {
     loader.fetchOptions = { headers: { Accept: "application/vnd.github.v3.raw" } };
   });
 
-  const highlightMaterial = new THREE.MeshPhongMaterial({
+  // Memoize the highlight material
+  const highlightMaterial = useMemo(() => new THREE.MeshPhongMaterial({
     shininess: 10,
     color: "#FFFFFF",
     emissive: "#FFFFFF",
     emissiveIntensity: 0.25
-  });
+  }), []);
 
-  const highlightLinkGeometry = (m, revert) => {
+  // Highlight the link geometry under a joint
+  const highlightLinkGeometry = useCallback((m, revert) => {
     const traverse = c => {
       if (c.type === "Mesh") {
         if (revert) {
@@ -90,23 +91,38 @@ const LoadModel = ({ filepath }) => {
       }
     };
     traverse(m);
-  };
+  }, [highlightMaterial]);
 
-  const onMouseMove = event => {
-    toMouseCoord(gl.domElement, event, mouse);
-    const collision = getCollisions(camera, robot, mouse).shift() || null;
-    const joint = collision && findNearestJoint(collision.object);
-    if (joint !== hovered) {
-      if (hovered) {
-        highlightLinkGeometry(hovered, true);
-        setHovered(null);
+  const onMouseMove = useCallback(event => {
+    try {
+      toMouseCoord(gl.domElement, event, mouse);
+      const collision = getCollisions(camera, robot, mouse).shift() || null;
+      if (collision) {
+        const joint = findNearestJoint(collision.object);
+        if (joint !== hovered) {
+          if (hovered) {
+            highlightLinkGeometry(hovered, true);
+            setHovered(null);
+          }
+          if (joint) {
+            highlightLinkGeometry(joint, false);
+            setHovered(joint);
+          }
+        }
       }
-      if (joint) {
-        highlightLinkGeometry(joint, false);
-        setHovered(joint);
-      }
+    } catch (error) {
+      console.error("Error during onMouseMove:", error);
     }
-  };
+  }, [camera, gl, hovered, robot, highlightLinkGeometry]);
+
+  useEffect(() => {
+    if (gl && gl.domElement) {
+      gl.domElement.addEventListener('mousemove', onMouseMove);
+      return () => {
+        gl.domElement.removeEventListener('mousemove', onMouseMove);
+      };
+    }
+  }, [gl, onMouseMove]);
 
   return (
     <mesh
@@ -118,21 +134,13 @@ const LoadModel = ({ filepath }) => {
         ref={ref}
         object={robot}
         dispose={null}
-        onPointerMove={onMouseMove}
-        onPointerOut={() => {
-          if (hovered) {
-            highlightLinkGeometry(hovered, true);
-            setHovered(null);
-          }
-        }}
       />
     </mesh>
   );
 };
 
 export const Work = () => {
-  var modelpath =
-    "https://raw.githubusercontent.com/nakano16180/robot-web-viewer/master/public/urdf/open_manipulator.URDF";
+  const modelPath = "https://raw.githubusercontent.com/nakano16180/robot-web-viewer/master/public/urdf/open_manipulator.URDF";
 
   return (
     <div css={theme}>
@@ -151,7 +159,7 @@ export const Work = () => {
           castShadow
         />
         <Suspense fallback={null}>
-          <LoadModel filepath={modelpath} />
+          <LoadModel filepath={modelPath} />
         </Suspense>
         <OrbitControls />
         <gridHelper args={[10, 10]} />
