@@ -1,12 +1,10 @@
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import * as THREE from "three";
-import  { useRef, Suspense, useState, useCallback, useMemo, useEffect } from "react";
+import { useRef, Suspense, useState, useCallback, useMemo, useEffect } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { css, jsx } from "@emotion/react";
-import JSZip from "jszip";
-
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import URDFLoader from "urdf-loader";
 
@@ -66,7 +64,7 @@ const LoadModel = ({ filepath }) => {
     loader.fetchOptions = { headers: { Accept: "application/vnd.github.v3.raw" } };
   });
 
-  // Define the highlight material
+  // Memoize the highlight material
   const highlightMaterial = useMemo(() => new THREE.MeshPhongMaterial({
     shininess: 10,
     color: "#FFFFFF",
@@ -142,30 +140,7 @@ const LoadModel = ({ filepath }) => {
 };
 
 export const Work = () => {
-  const [modelPath, setModelPath] = useState(null);
-
-  useEffect(() => {
-    const fetchAndUnzipModel = async () => {
-      try {
-        const response = await fetch("https://media.kscale.dev/stompy/latest_stl_urdf.tar.gz");
-        const arrayBuffer = await response.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        const urdfFile = zip.file("robot.urdf");
-
-        if (urdfFile) {
-          const urdfBlob = await urdfFile.async("blob");
-          const urdfUrl = URL.createObjectURL(urdfBlob);
-          setModelPath(urdfUrl);
-        } else {
-          console.error("robot.urdf not found in the zip file");
-        }
-      } catch (error) {
-        console.error("Error fetching or unzipping model:", error);
-      }
-    };
-
-    fetchAndUnzipModel();
-  }, []);
+  const modelPath = "https://raw.githubusercontent.com/vrtnis/robot-web-viewer/master/public/urdf/robot.urdf";
 
   return (
     <div css={theme}>
@@ -184,7 +159,7 @@ export const Work = () => {
           castShadow
         />
         <Suspense fallback={null}>
-          {modelPath && <LoadModel filepath={modelPath} />}
+          <LoadModel filepath={modelPath} />
         </Suspense>
         <OrbitControls />
         <gridHelper args={[10, 10]} />
