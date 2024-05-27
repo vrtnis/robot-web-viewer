@@ -7,6 +7,7 @@ import { OrbitControls } from "@react-three/drei";
 import { css, jsx } from "@emotion/react";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import URDFLoader from "urdf-loader";
+import _ from "lodash";
 
 const theme = css`
   width: 100vw;
@@ -30,9 +31,7 @@ const getCollisions = (camera, robot, mouse) => {
   return raycaster.intersectObjects(meshes);
 };
 
-const isJoint = j => {
-  return j.isURDFJoint && j.jointType !== "fixed";
-};
+const isJoint = j => j.isURDFJoint && j.jointType !== "fixed";
 
 const findNearestJoint = m => {
   let curr = m;
@@ -64,7 +63,6 @@ const LoadModel = ({ filepath }) => {
     loader.fetchOptions = { headers: { Accept: "application/vnd.github.v3.raw" } };
   });
 
-  // Memoize the highlight material
   const highlightMaterial = useMemo(() => new THREE.MeshPhongMaterial({
     shininess: 10,
     color: "#FFFFFF",
@@ -72,8 +70,8 @@ const LoadModel = ({ filepath }) => {
     emissiveIntensity: 0.25
   }), []);
 
-  // Highlight the link geometry under a joint
   const highlightLinkGeometry = useCallback((m, revert) => {
+    if (!m) return;
     const traverse = c => {
       if (c.type === "Mesh") {
         if (revert) {
@@ -93,8 +91,10 @@ const LoadModel = ({ filepath }) => {
     traverse(m);
   }, [highlightMaterial]);
 
-  const onMouseMove = useCallback(event => {
+  const onMouseMove = useCallback(_.throttle(event => {
     try {
+      if (!robot) return;
+
       toMouseCoord(gl.domElement, event, mouse);
       const collision = getCollisions(camera, robot, mouse).shift() || null;
       if (collision) {
@@ -113,7 +113,7 @@ const LoadModel = ({ filepath }) => {
     } catch (error) {
       console.error("Error during onMouseMove:", error);
     }
-  }, [camera, gl, hovered, robot, highlightLinkGeometry]);
+  }, 100), [camera, gl, hovered, robot, highlightLinkGeometry]);
 
   useEffect(() => {
     if (gl && gl.domElement) {
