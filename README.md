@@ -3,7 +3,7 @@ URDF Viewer using Reactjs, [three.js](https://threejs.org/) and [urdf-loader](ht
 
 [demo](https://vrtnis.github.io/robot-web-viewer/?filepath=https://raw.githubusercontent.com/vrtnis/robot-web-viewer/main/public/urdf/robot.urdf)
 
-![robot-web-viewer](https://github.com/vrtnis/robot-web-viewer/blob/main/robot_viewer_demo.mp4)
+![robot-web-viewer](https://github.com/vrtnis/robot-web-viewer/blob/main/robotviewerdemo.gif)
 
 ### setup
 
