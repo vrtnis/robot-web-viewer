@@ -162,7 +162,7 @@ export const Work = () => {
           <LoadModel filepath={modelPath} />
         </Suspense>
         <OrbitControls />
-        {/* <gridHelper args={[10, 10]} /> */}
+        {/*<gridHelper args={[10, 10]} /> */}
 
         <axesHelper />
       </Canvas>
