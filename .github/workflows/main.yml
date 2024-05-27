@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: github-pages 
+    environment: github-pages  # Specify the environment to use the secrets in it
 
     steps:
       - name: Checkout repository
@@ -27,5 +27,5 @@ jobs:
       - name: Deploy website
         uses: peaceiris/actions-gh-pages@v3.6.4
         with:
-          personal_token: ${{ secrets.ACTIONS_DEPLOY_KEY }}  
+          personal_token: ${{ secrets.ACTIONS_DEPLOY_KEY }}  # Use personal_token instead of github_token
           publish_dir: build
