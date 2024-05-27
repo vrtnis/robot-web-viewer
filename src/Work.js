@@ -2,7 +2,7 @@
 /** @jsx jsx */
 import * as THREE from "three";
 import { useRef, Suspense, useState, useCallback, useMemo, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { css, jsx } from "@emotion/react";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
@@ -95,8 +95,6 @@ const LoadModel = ({ filepath }) => {
 
   const onMouseMove = useCallback(event => {
     try {
-      if (!robot) return;
-
       toMouseCoord(gl.domElement, event, mouse);
       const collision = getCollisions(camera, robot, mouse).shift() || null;
       if (collision) {
