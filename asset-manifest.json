@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/robot-web-viewer/static/js/main.9f49dcfa.js",
+    "main.js": "/robot-web-viewer/static/js/main.7ea76f54.js",
     "index.html": "/robot-web-viewer/index.html",
-    "main.9f49dcfa.js.map": "/robot-web-viewer/static/js/main.9f49dcfa.js.map"
+    "main.7ea76f54.js.map": "/robot-web-viewer/static/js/main.7ea76f54.js.map"
   },
   "entrypoints": [
-    "static/js/main.9f49dcfa.js"
+    "static/js/main.7ea76f54.js"
   ]
 }
