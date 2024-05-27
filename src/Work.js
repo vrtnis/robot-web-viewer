@@ -70,7 +70,7 @@ const LoadModel = ({ filepath }) => {
     emissiveIntensity: 0.25
   }), []);
 
-  const highlightLinkGeometry = useCallback((m, revert) => {
+  const highlightLinkGeometry = (m, revert) => {
     if (!m) return;
     const traverse = c => {
       if (c.type === "Mesh") {
@@ -89,7 +89,7 @@ const LoadModel = ({ filepath }) => {
       }
     };
     traverse(m);
-  }, [highlightMaterial]);
+  };
 
   const onMouseMove = useCallback(
     _.throttle(event => {
@@ -115,7 +115,7 @@ const LoadModel = ({ filepath }) => {
         console.error("Error during onMouseMove:", error);
       }
     }, 100),
-    [camera, gl, hovered, robot, highlightLinkGeometry]
+    [camera, gl, hovered, robot]
   );
 
   useEffect(() => {
