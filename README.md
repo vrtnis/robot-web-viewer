@@ -24,5 +24,3 @@ $ yarn start
 ```
 $ yarn deploy
 ```
-Trigger build
-Trigger build
