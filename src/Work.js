@@ -70,7 +70,7 @@ const LoadModel = ({ filepath }) => {
     emissiveIntensity: 0.25
   }), []);
 
-  const highlightLinkGeometry = (m, revert) => {
+  const highlightLinkGeometry = useCallback((m, revert) => {
     if (!m) return;
     const traverse = c => {
       if (c.type === "Mesh") {
@@ -89,34 +89,31 @@ const LoadModel = ({ filepath }) => {
       }
     };
     traverse(m);
-  };
+  }, [highlightMaterial]);
 
-  const onMouseMove = useCallback(
-    _.throttle(event => {
-      try {
-        if (!robot) return;
+  const onMouseMove = useCallback(_.throttle(event => {
+    try {
+      if (!robot) return;
 
-        toMouseCoord(gl.domElement, event, mouse);
-        const collision = getCollisions(camera, robot, mouse).shift() || null;
-        if (collision) {
-          const joint = findNearestJoint(collision.object);
-          if (joint !== hovered) {
-            if (hovered) {
-              highlightLinkGeometry(hovered, true);
-              setHovered(null);
-            }
-            if (joint) {
-              highlightLinkGeometry(joint, false);
-              setHovered(joint);
-            }
+      toMouseCoord(gl.domElement, event, mouse);
+      const collision = getCollisions(camera, robot, mouse).shift() || null;
+      if (collision) {
+        const joint = findNearestJoint(collision.object);
+        if (joint !== hovered) {
+          if (hovered) {
+            highlightLinkGeometry(hovered, true);
+            setHovered(null);
+          }
+          if (joint) {
+            highlightLinkGeometry(joint, false);
+            setHovered(joint);
           }
         }
-      } catch (error) {
-        console.error("Error during onMouseMove:", error);
       }
-    }, 100),
-    [camera, gl, hovered, robot]
-  );
+    } catch (error) {
+      console.error("Error during onMouseMove:", error);
+    }
+  }, 100), [camera, gl, hovered, robot, highlightLinkGeometry]);
 
   useEffect(() => {
     if (gl && gl.domElement) {
